@@ -111,11 +111,12 @@ class TestPublicIPDetector:
     @responses.activate
     def test_get_public_ip_timeout(self):
         """Test gestione timeout"""
-        # Simula timeout
+        # Simula timeout con un'eccezione di rete
+        import requests
         responses.add(
             responses.GET,
             "https://api.ipify.org",
-            body=Exception("Timeout")
+            body=requests.exceptions.Timeout("Connection timeout")
         )
         # Secondo servizio funziona
         responses.add(

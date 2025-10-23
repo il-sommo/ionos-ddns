@@ -36,3 +36,6 @@ uv.lock
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Security scan reports
+bandit_report.json

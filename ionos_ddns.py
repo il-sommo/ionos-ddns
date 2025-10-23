@@ -45,7 +45,8 @@ class PublicIPDetector:
                     # Verifica che sia un IPv4 valido
                     ipaddress.IPv4Address(ip)
                     return ip, 'A'
-            except Exception:
+            except (requests.exceptions.RequestException, ValueError, ipaddress.AddressValueError):
+                # Ignora errori di rete o IP non validi e prova il prossimo servizio
                 continue
 
         # Se IPv4 fallisce, prova con IPv6
@@ -57,7 +58,8 @@ class PublicIPDetector:
                     # Verifica che sia un IPv6 valido
                     ipaddress.IPv6Address(ip)
                     return ip, 'AAAA'
-            except Exception:
+            except (requests.exceptions.RequestException, ValueError, ipaddress.AddressValueError):
+                # Ignora errori di rete o IP non validi e prova il prossimo servizio
                 continue
 
         raise RuntimeError("Impossibile rilevare l'indirizzo IP pubblico")
@@ -67,6 +69,7 @@ class IONOSClient:
     """Client per le API IONOS"""
 
     BASE_URL = "https://api.hosting.ionos.com"
+    REQUEST_TIMEOUT = 30  # Timeout in secondi per le richieste HTTP
 
     def __init__(self, pub_key: str, secret_key: str):
         self.pub_key = pub_key
@@ -80,7 +83,7 @@ class IONOSClient:
     def get_zones(self) -> list:
         """Recupera tutte le zone DNS gestite"""
         url = f"{self.BASE_URL}/dns/v1/zones"
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, headers=self.headers, timeout=self.REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
 
@@ -112,7 +115,7 @@ class IONOSClient:
         """
         url = f"{self.BASE_URL}/dns/v1/zones/{zone_id}"
         try:
-            response = requests.get(url, headers=self.headers)
+            response = requests.get(url, headers=self.headers, timeout=self.REQUEST_TIMEOUT)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
@@ -158,7 +161,7 @@ class IONOSClient:
         }
 
         # Crea il record usando POST
-        response = requests.post(url, headers=self.headers, json=[new_record])
+        response = requests.post(url, headers=self.headers, json=[new_record], timeout=self.REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
 
@@ -192,7 +195,7 @@ class IONOSClient:
         }
 
         # Aggiorna il record usando PUT
-        response = requests.put(url, headers=self.headers, json=updated_record)
+        response = requests.put(url, headers=self.headers, json=updated_record, timeout=self.REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
 
