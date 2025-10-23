@@ -1,0 +1,18 @@
+[project]
+name = "ionos-ddns"
+version = "0.1.0"
+description = "Script per aggiornare DNS dinamico su IONOS"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+    "responses>=0.23.0",
+]
+
+[project.scripts]
+ionos-ddns = "ionos_ddns:main"
