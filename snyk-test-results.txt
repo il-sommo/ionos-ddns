@@ -1,0 +1,49 @@
+
+Testing /Users/fabrizio/work/dev/dyn...
+
+Tested 357 dependencies for known issues, found 9 issues, 19 vulnerable paths.
+
+
+Issues with no direct upgrade or patch:
+  ✗ Timing Attack [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-ECDSA-6184115] in ecdsa@0.19.1
+    introduced by ecdsa@0.19.1 and 2 other path(s)
+  No upgrade or patch available
+  ✗ Missing Encryption of Sensitive Data [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-ECDSA-6219992] in ecdsa@0.19.1
+    introduced by ecdsa@0.19.1 and 2 other path(s)
+  No upgrade or patch available
+  ✗ Allocation of Resources Without Limits or Throttling [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-GMPY2-9610483] in gmpy2@2.2.1
+    introduced by gmpy2@2.2.1
+  No upgrade or patch available
+  ✗ Incorrect Synchronization [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-OPENWEBUI-9680258] in open-webui@0.6.34
+    introduced by open-webui@0.6.34
+  No upgrade or patch available
+  ✗ Arbitrary File Write via Archive Extraction (Zip Slip) [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-OPENWEBUI-9680274] in open-webui@0.6.34
+    introduced by open-webui@0.6.34
+  No upgrade or patch available
+  ✗ Directory Traversal [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-OPENWEBUI-9684287] in open-webui@0.6.34
+    introduced by open-webui@0.6.34
+  No upgrade or patch available
+  ✗ Server-side Request Forgery (SSRF) [Critical Severity][https://security.snyk.io/vuln/SNYK-PYTHON-OPENWEBUI-9789616] in open-webui@0.6.34
+    introduced by open-webui@0.6.34
+  No upgrade or patch available
+  ✗ NULL Pointer Dereference [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-PYMUPDF-13058632] in pymupdf@1.26.4
+    introduced by pymupdf@1.26.4
+  No upgrade or patch available
+  ✗ Buffer Overflow [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-TORCH-10332644] in torch@2.8.0
+    introduced by torch@2.8.0 and 6 other path(s)
+  No upgrade or patch available
+
+
+
+Organization:      il-sommo
+Package manager:   pip
+Target file:       requirements.txt
+Project name:      dyn
+Open source:       no
+Project path:      /Users/fabrizio/work/dev/dyn
+Licenses:          enabled
+
+
+
+You have reached your monthly limit of 200 private tests for your il-sommo org.
+To learn more about our plans and increase your tests limit visit https://snyk.io/plans.
