@@ -39,3 +39,8 @@ htmlcov/
 
 # Security scan reports
 bandit_report.json
+snyk-report.json
+snyk-test-results.txt
+
+# Requirements
+requirements.txt
