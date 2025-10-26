@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    configure)
+        echo "=================================================="
+        echo "IONOS Dynamic DNS Updater installato con successo!"
+        echo "=================================================="
+        echo ""
+        echo "PROSSIMI PASSI:"
+        echo ""
+        echo "1. Configura le tue credenziali API IONOS:"
+        echo "   sudo nano /etc/ionos-ddns/dns.json"
+        echo ""
+        echo "   Usa /etc/ionos-ddns/dns.json.example come riferimento"
+        echo ""
+        echo "2. Testa lo script manualmente:"
+        echo "   ionos-ddns your-hostname.your-domain.com --config /etc/ionos-ddns/dns.json"
+        echo ""
+        echo "3. (Opzionale) Per configurare l'aggiornamento automatico ogni 5 minuti,"
+        echo "   crea un file cron job:"
+        echo ""
+        echo "   sudo tee /etc/cron.d/ionos-ddns > /dev/null << 'EOF'"
+        echo "# IONOS Dynamic DNS Updater - Runs every 5 minutes"
+        echo "# Modifica con il tuo hostname"
+        echo "*/5 * * * * root /usr/bin/ionos-ddns your-hostname.your-domain.com --config /etc/ionos-ddns/dns.json >> /var/log/ionos-ddns.log 2>&1"
+        echo "EOF"
+        echo ""
+        echo "   Assicurati di sostituire 'your-hostname.your-domain.com' con il tuo hostname reale!"
+        echo ""
+        echo "4. Verifica i log (se hai configurato il cron):"
+        echo "   tail -f /var/log/ionos-ddns.log"
+        echo ""
+        echo "=================================================="
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

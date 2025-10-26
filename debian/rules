@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	# Crea le directory necessarie
+	install -d debian/ionos-ddns/usr/bin
+	install -d debian/ionos-ddns/etc/ionos-ddns
+
+	# Installa lo script principale
+	install -m 755 ionos_ddns.py debian/ionos-ddns/usr/bin/ionos-ddns
+
+	# Installa il file di configurazione esempio
+	install -m 644 dns.json.example debian/ionos-ddns/etc/ionos-ddns/dns.json.example
+
+	# Installa lo script di setup cron
+	install -m 755 ionos-ddns-setup-cron debian/ionos-ddns/usr/bin/ionos-ddns-setup-cron
+
+override_dh_auto_test:
+	# Salta i test automatici
+
+override_dh_auto_build:
+	# Niente da buildare per uno script Python standalone
+
+override_dh_auto_clean:
+	# Niente da pulire

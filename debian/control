@@ -1,0 +1,25 @@
+Source: ionos-ddns
+Section: net
+Priority: optional
+Maintainer: Fabrizio <fabrizio@example.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://github.com/yourusername/ionos-ddns
+Vcs-Git: https://github.com/yourusername/ionos-ddns.git
+Rules-Requires-Root: no
+
+Package: ionos-ddns
+Architecture: all
+Depends: ${misc:Depends},
+         python3 (>= 3.9),
+         python3-requests (>= 2.31.0),
+         cron
+Description: IONOS Dynamic DNS Updater
+ Script Python per aggiornare automaticamente i record DNS su IONOS
+ con l'indirizzo IP pubblico corrente.
+ .
+ Caratteristiche:
+  - Rileva automaticamente l'IP pubblico (IPv4 e IPv6)
+  - Aggiorna o crea record DNS su IONOS tramite API
+  - Supporta automazione tramite cron job
+  - Gestione errori robusta

@@ -14,5 +14,4 @@ test = [
     "responses>=0.23.0",
 ]
 
-[project.scripts]
-ionos-ddns = "ionos_ddns:main"
+# Scripts section removed - installation handled by debian/rules

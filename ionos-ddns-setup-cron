@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Script per configurare il cron job di IONOS DDNS
+
+if [ "$EUID" -ne 0 ]; then
+    echo "Questo script deve essere eseguito come root (usa sudo)"
+    exit 1
+fi
+
+echo "=============================================="
+echo "IONOS DDNS - Configurazione Cron Job"
+echo "=============================================="
+echo ""
+
+# Chiedi l'hostname
+read -p "Inserisci l'hostname completo da aggiornare (es. dev01.example.com): " HOSTNAME
+
+if [ -z "$HOSTNAME" ]; then
+    echo "Errore: hostname non può essere vuoto"
+    exit 1
+fi
+
+# Chiedi il percorso del file di configurazione
+read -p "Percorso del file di configurazione [/etc/ionos-ddns/dns.json]: " CONFIG_PATH
+CONFIG_PATH=${CONFIG_PATH:-/etc/ionos-ddns/dns.json}
+
+# Verifica che il file di configurazione esista
+if [ ! -f "$CONFIG_PATH" ]; then
+    echo "Errore: il file $CONFIG_PATH non esiste"
+    echo "Crea prima il file di configurazione con le tue credenziali API IONOS"
+    exit 1
+fi
+
+# Crea il file cron.d
+CRON_FILE="/etc/cron.d/ionos-ddns"
+
+echo "Creazione del cron job in $CRON_FILE..."
+
+cat > "$CRON_FILE" << EOF
+# IONOS Dynamic DNS Updater - Runs every 5 minutes
+# Hostname: $HOSTNAME
+# Config: $CONFIG_PATH
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+*/5 * * * * root /usr/bin/ionos-ddns $HOSTNAME --config $CONFIG_PATH >> /var/log/ionos-ddns.log 2>&1
+EOF
+
+chmod 644 "$CRON_FILE"
+
+echo ""
+echo "Cron job configurato con successo!"
+echo ""
+echo "Dettagli:"
+echo "  - Hostname: $HOSTNAME"
+echo "  - Configurazione: $CONFIG_PATH"
+echo "  - Frequenza: ogni 5 minuti"
+echo "  - Log file: /var/log/ionos-ddns.log"
+echo ""
+echo "Il cron job è ora attivo. Per verificare i log:"
+echo "  sudo tail -f /var/log/ionos-ddns.log"
+echo ""
+echo "Per modificare il cron job:"
+echo "  sudo nano $CRON_FILE"
+echo ""
+echo "Per disabilitare il cron job:"
+echo "  sudo rm $CRON_FILE"
+echo ""

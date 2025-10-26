@@ -1,0 +1,2 @@
+dns.json.example etc/ionos-ddns/
+ionos-ddns-setup-cron usr/bin/
