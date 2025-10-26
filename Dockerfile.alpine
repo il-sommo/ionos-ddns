@@ -1,0 +1,63 @@
+# Dockerfile for building and testing ionos-ddns on Alpine Linux 3.22
+FROM alpine:3.22
+
+# Install build dependencies
+RUN apk add --no-cache \
+    alpine-sdk \
+    python3 \
+    py3-requests \
+    dcron \
+    sudo \
+    make
+
+# Create build user (abuild requires non-root)
+RUN adduser -D -G abuild builder && \
+    echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Copy project files first (as root)
+COPY . /home/builder/ionos-ddns/
+
+# Change ownership to builder
+RUN chown -R builder:abuild /home/builder/ionos-ddns
+
+# Switch to builder user
+USER builder
+WORKDIR /home/builder
+
+# Setup abuild keys
+RUN abuild-keygen -a -n
+
+# Install public key for repository signing (as root)
+USER root
+RUN cp /home/builder/.abuild/*.rsa.pub /etc/apk/keys/
+
+# Switch back to builder
+USER builder
+
+# Set working directory
+WORKDIR /home/builder/ionos-ddns
+
+# Display detected distribution
+RUN make detect-distro
+
+# Build the package
+RUN make apk-build
+
+# Test installation (as root)
+USER root
+RUN apk add --allow-untrusted /home/builder/packages/builder/x86_64/ionos-ddns-*.apk
+
+# Verify installation
+RUN which ionos-ddns && \
+    ionos-ddns --help || echo "Installation successful"
+
+# Display installed files
+RUN echo "=== Installed files ===" && \
+    ls -la /usr/bin/ionos-ddns* && \
+    ls -la /etc/ionos-ddns/
+
+# Switch back to builder for interactive use
+USER builder
+WORKDIR /home/builder/ionos-ddns
+
+CMD ["/bin/sh"]

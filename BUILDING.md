@@ -1,12 +1,57 @@
-# Guida alla Build del Pacchetto .deb
+# Guida alla Build dei Pacchetti
 
-Questa guida spiega come costruire il pacchetto Debian per IONOS Dynamic DNS Updater su Ubuntu 24.04.
+Questa guida spiega come costruire i pacchetti nativi per IONOS Dynamic DNS Updater su diverse distribuzioni Linux.
 
-## Prerequisiti
+## Distribuzioni Supportate
 
-Sistema operativo: Ubuntu 24.04 (Noble Numbat)
+- **Debian/Ubuntu**: Pacchetto `.deb` (testato su Ubuntu 24.04)
+- **Alpine Linux**: Pacchetto `.apk` (testato su Alpine 3.22.2 x64)
 
-## Installazione Dipendenze
+Il Makefile rileva automaticamente la distribuzione e usa il sistema di packaging appropriato.
+
+## Auto-Detection della Distribuzione
+
+Il Makefile rileva automaticamente la tua distribuzione:
+
+```bash
+make detect-distro
+```
+
+Output esempio:
+```
+Distribuzione rilevata: ubuntu
+```
+
+Puoi usare i target generici che rilevano automaticamente la distro oppure i target specifici per ogni distribuzione.
+
+---
+
+## Build Rapida (Auto-Detection)
+
+Per un build veloce su qualsiasi distribuzione supportata:
+
+```bash
+# 1. Installa dipendenze di build
+make deps
+
+# 2. Costruisci il pacchetto nativo
+make build
+
+# 3. Installa il pacchetto
+make install
+```
+
+Il sistema rileverà automaticamente se sei su Debian/Ubuntu o Alpine e userà il metodo appropriato.
+
+---
+
+## Debian/Ubuntu - Build Pacchetto .deb
+
+### Prerequisiti
+
+Sistema operativo: Ubuntu 24.04 (Noble Numbat) o Debian equivalente
+
+### Installazione Dipendenze
 
 **IMPORTANTE**: Se riscontri problemi di connettività APT (timeout sulla porta 80), vedi la sezione [Troubleshooting - Problema Connettività APT](#problema-connettività-apt).
 
@@ -30,7 +75,10 @@ sudo apt-get install -y debhelper
 ### Metodo 1: Usando il Makefile (raccomandato)
 
 ```bash
-# Build del pacchetto
+# Build del pacchetto .deb
+make deb-build
+
+# Oppure usa il target generico che rileva la distro
 make build
 
 # Il file .deb sarà creato nella directory parent
@@ -110,9 +158,118 @@ dh_clean
 rm -rf debian/ionos-ddns debian/.debhelper
 ```
 
+---
+
+## Alpine Linux - Build Pacchetto .apk
+
+### Prerequisiti
+
+Sistema operativo: Alpine Linux 3.22 o superiore
+
+### Installazione Dipendenze
+
+Installa gli strumenti necessari per costruire pacchetti Alpine:
+
+```bash
+make apk-deps
+```
+
+Questo installerà:
+- `alpine-sdk` (strumenti di build)
+- Configurerà `abuild` con chiavi di firma
+- Aggiungerà l'utente al gruppo `abuild`
+
+**Nota**: Potrebbe essere necessario fare logout/login dopo l'installazione per rendere effettivo il gruppo `abuild`.
+
+### Costruzione del Pacchetto
+
+```bash
+# Build del pacchetto .apk
+make apk-build
+
+# Il file .apk sarà creato in ~/packages/
+find ~/packages -name "ionos-ddns-*.apk"
+```
+
+### Installazione del Pacchetto
+
+```bash
+# Usando il Makefile
+make apk-install
+
+# Oppure manualmente
+sudo apk add --allow-untrusted ~/packages/*/ionos-ddns-*.apk
+```
+
+### Output della Build
+
+Dopo la build, troverai in `~/packages/builder/x86_64/`:
+
+- `ionos-ddns-0.1.0-r0.apk` - Pacchetto principale (~13 KB)
+- `ionos-ddns-doc-0.1.0-r0.apk` - Documentazione (~6 KB)
+
+### Verifica dell'Installazione
+
+```bash
+# Verifica che il comando sia disponibile
+which ionos-ddns
+
+# Verifica la versione
+apk info ionos-ddns
+
+# Verifica i file installati
+apk info -L ionos-ddns
+```
+
+File installati:
+- `/usr/bin/ionos-ddns` - Script principale
+- `/usr/bin/ionos-ddns-setup-cron` - Helper per configurare cron
+- `/etc/ionos-ddns/dns.json.example` - File di configurazione esempio
+- `/usr/share/doc/ionos-ddns/README.md` - Documentazione
+
+### Build con Docker (Consigliato per Testing)
+
+Se non hai Alpine Linux installato, puoi usare Docker per costruire e testare il pacchetto:
+
+```bash
+# Costruisci il pacchetto in un container Alpine
+sudo docker build -f Dockerfile.alpine -t ionos-ddns-alpine-build .
+
+# Estrai i pacchetti costruiti
+mkdir -p dist/alpine
+sudo docker run --rm -v $(pwd)/dist/alpine:/output \
+    ionos-ddns-alpine-build \
+    sh -c "cp /home/builder/packages/builder/x86_64/ionos-ddns-*.apk /output/"
+
+# Verifica i pacchetti estratti
+ls -lh dist/alpine/
+
+# Testa l'installazione in un container Alpine pulito
+sudo docker run --rm -v $(pwd)/dist/alpine:/packages alpine:3.22 sh -c "
+    apk add --no-cache python3 py3-requests dcron
+    apk add --allow-untrusted /packages/ionos-ddns-0.1.0-r0.apk
+    ionos-ddns --help
+"
+```
+
+Oppure usa lo script helper:
+
+```bash
+# Build automatizzato con Docker
+./docker-build-alpine.sh
+```
+
+Lo script eseguirà:
+1. Build dell'immagine Docker
+2. Costruzione del pacchetto APK
+3. Estrazione del pacchetto in `dist/alpine/`
+4. Verifica dell'installazione
+
+---
+
 ## Troubleshooting
 
-### Problema Connettività APT
+### Problema Connettività APT (Debian/Ubuntu)
 
 **Errore**: `Could not connect to archive.ubuntu.com:80 - connection timed out`
 
@@ -159,7 +316,7 @@ make clean
 make build
 ```
 
-### Errore di dipendenze durante l'installazione
+### Errore di dipendenze durante l'installazione (Debian/Ubuntu)
 
 ```bash
 sudo apt-get install -f -y
@@ -169,6 +326,40 @@ Questo comando installerà automaticamente tutte le dipendenze runtime necessari
 - `python3` (>= 3.9)
 - `python3-requests` (>= 2.31.0)
 - `cron`
+
+### Errori Alpine Linux
+
+#### Errore: "ERROR: ionos-ddns: UNTRUSTED signature"
+
+**Soluzione**: Usa `--allow-untrusted` durante l'installazione:
+
+```bash
+sudo apk add --allow-untrusted ~/packages/*/ionos-ddns-*.apk
+```
+
+Oppure installa la chiave pubblica:
+
+```bash
+sudo cp ~/.abuild/*.rsa.pub /etc/apk/keys/
+sudo apk add ~/packages/*/ionos-ddns-*.apk
+```
+
+#### Errore: "abuild: command not found"
+
+Installa le dipendenze:
+
+```bash
+make apk-deps
+```
+
+#### Errore: "Permission denied" durante abuild
+
+Assicurati di essere nel gruppo `abuild`:
+
+```bash
+sudo addgroup $USER abuild
+# Logout e login necessari
+```
 
 ## Modificare il Pacchetto
 
@@ -184,30 +375,48 @@ Se vuoi modificare il pacchetto:
    make build
    ```
 
-## Struttura della Directory debian/
+## Struttura del Progetto
+
+### File di Packaging
 
 ```
-debian/
-├── changelog       - Storia delle versioni (formato Debian)
-├── control        - Metadata del pacchetto e dipendenze
-├── install        - File da installare e destinazioni (opzionale)
-├── postinst       - Script post-installazione
-└── rules          - Script di build (Makefile)
+.
+├── debian/                              # Debian/Ubuntu packaging
+│   ├── changelog                        # Storia versioni (formato Debian)
+│   ├── control                          # Metadata e dipendenze
+│   ├── postinst                         # Script post-installazione
+│   └── rules                            # Script di build (Makefile)
+│
+├── APKBUILD                             # Alpine Linux package definition
+├── ionos-ddns.post-install              # Alpine post-install script
+│
+├── Dockerfile.alpine                    # Docker per build Alpine
+├── docker-build-alpine.sh               # Script helper build Docker
+│
+├── Makefile                             # Build system con auto-detection
+├── BUILDING.md                          # Questa guida
+└── README.md                            # Documentazione principale
 ```
+
+### Dettagli dei File Debian
+
+- **debian/changelog**: Traccia tutte le versioni e modifiche del pacchetto
+- **debian/control**: Specifica metadati, dipendenze di build e runtime
+- **debian/postinst**: Script eseguito dopo l'installazione del pacchetto
+- **debian/rules**: Makefile che definisce come costruire e installare il pacchetto
 
 **Nota**: Il file `debian/compat` è obsoleto in debhelper >= 13 e non dovrebbe essere usato. Il livello di compatibilità è specificato in `debian/control` tramite `Build-Depends: debhelper-compat (= 13)`.
 
-### Dettagli dei File
+### Dettagli dei File Alpine
 
-- **changelog**: Traccia tutte le versioni e modifiche del pacchetto
-- **control**: Specifica metadati, dipendenze di build e runtime
-- **install**: File aggiuntivi da installare (non usato, l'installazione è gestita da `rules`)
-- **postinst**: Script eseguito dopo l'installazione del pacchetto
-- **rules**: Makefile che definisce come costruire e installare il pacchetto
+- **APKBUILD**: File principale di definizione del pacchetto Alpine (simile a Debian control + rules)
+- **ionos-ddns.post-install**: Script eseguito dopo l'installazione (equivalente a debian/postinst)
+- **Dockerfile.alpine**: Ambiente di build Docker per Alpine Linux
+- **docker-build-alpine.sh**: Script automatizzato per build e test con Docker
 
 ## Testing del Pacchetto
 
-Prima di distribuire il pacchetto, testalo:
+### Testing Debian/Ubuntu
 
 ```bash
 # Installa
@@ -227,15 +436,77 @@ ionos-ddns your-hostname.your-domain.com --config /etc/ionos-ddns/dns.json
 sudo apt remove ionos-ddns
 ```
 
+### Testing Alpine Linux
+
+```bash
+# Installa
+sudo apk add --allow-untrusted ~/packages/*/ionos-ddns-*.apk
+
+# Testa
+ionos-ddns --help
+
+# Configura
+sudo cp /etc/ionos-ddns/dns.json.example /etc/ionos-ddns/dns.json
+sudo vi /etc/ionos-ddns/dns.json
+
+# Esegui test
+ionos-ddns your-hostname.your-domain.com --config /etc/ionos-ddns/dns.json
+
+# Disinstalla
+sudo apk del ionos-ddns
+```
+
 ## Distribuzione
 
-Il file `.deb` può essere distribuito e installato su qualsiasi sistema Ubuntu 24.04 con:
+### Debian/Ubuntu
+
+Il file `.deb` può essere distribuito e installato su qualsiasi sistema Ubuntu 24.04/Debian con:
 
 ```bash
 sudo dpkg -i ionos-ddns_0.1.0-1_all.deb
 sudo apt-get install -f  # Se necessario
 ```
 
-## Creazione Repository APT (Opzionale)
+### Alpine Linux
 
-Per creare un repository APT personalizzato, consulta la documentazione Debian su `reprepro` o usa servizi come Packagecloud.
+Il file `.apk` può essere distribuito e installato su Alpine Linux 3.22+ con:
+
+```bash
+sudo apk add --allow-untrusted ionos-ddns-0.1.0-r0.apk
+```
+
+### Creazione Repository
+
+#### Repository APT (Debian/Ubuntu)
+
+Per creare un repository APT personalizzato, consulta:
+- Documentazione Debian su `reprepro`
+- Servizi cloud come Packagecloud, Cloudsmith
+
+#### Repository APK (Alpine)
+
+Per creare un repository APK:
+
+```bash
+# Genera index firmato
+apk index -o APKINDEX.tar.gz ~/packages/builder/x86_64/*.apk
+abuild-sign -k ~/.abuild/*.rsa APKINDEX.tar.gz
+
+# Pubblica su server HTTP/S
+# Gli utenti aggiungeranno: echo "http://your-repo/path" | sudo tee -a /etc/apk/repositories
+```
+
+## Comparazione Pacchetti
+
+| Caratteristica | Debian (.deb) | Alpine (.apk) |
+|----------------|---------------|---------------|
+| **Dimensione pacchetto** | ~5 KB | ~13 KB |
+| **Dipendenze totali** | ~15 MB | ~15 MB |
+| **Tool di build** | debhelper, dpkg | alpine-sdk, abuild |
+| **Formato compressione** | gzip/xz | gzip |
+| **Sistema init** | systemd | OpenRC |
+| **Cron daemon** | cron | dcron |
+| **Firma pacchetto** | GPG (opzionale) | RSA (integrata) |
+| **Repository** | APT | APK |
+
+Entrambi i pacchetti installano gli stessi file e offrono la stessa funzionalità.

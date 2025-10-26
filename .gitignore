@@ -55,3 +55,13 @@ debian/debhelper-build-stamp
 *.deb
 *.buildinfo
 *.changes
+
+# Alpine packaging
+*.apk
+.abuild/
+*.tar.gz
+src/
+pkg/
+
+# Docker build artifacts
+dist/
