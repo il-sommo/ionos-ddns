@@ -1,7 +1,7 @@
 # Contributor: Fabrizio <fabrizio@example.com>
 # Maintainer: Fabrizio <fabrizio@example.com>
 pkgname=ionos-ddns
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=0
 pkgdesc="IONOS Dynamic DNS Updater - Automatic DNS record updates via IONOS API"
 url="https://github.com/yourusername/ionos-ddns"
